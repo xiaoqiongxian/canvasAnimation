@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>应用升级拓扑动画</title>
+</head>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#topologyContainer{
+		width: 100vw;
+		height: 100vh;
+		text-align: center;
+	}
+</style>
+<body>
+	<div id="topologyContainer">
+		<div>
+			<canvas id="topology" width="1200px" height="600px"></canvas>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="./lib/jquery.min.js"></script>
+<script type="text/javascript" src="./lib/vue.js"></script>
+<script type="text/javascript">
+	var topology = new Vue({
+		el:"#topologyContainer",
+		data:{
+			canvas:"",
+			ctx:"",
+			topNodeW:200,
+			topNodeH:150,
+			topNodeX:"",
+			topNodeY:"",
+			bottomNodeW:100,
+			bottomNodeH:100,
+			bottomNodeY:"",
+			bottomNodeStep:110,
+			lineFromY:"",
+			lineFromStep:"",
+			lineToY:"",
+			node:{
+				total:6,
+				finished:1
+			}
+		},
+		mounted:function(){	
+			this.drawUpgrading();
+		},
+		methods:{
+			drawUpgrading:function(){
+				var _self = this;
+				_self.initCanvas();
+				_self.drawTopology();
+				var imageIndex = 1;
+				var imageCount = 10;
+				var nodeIndex = 0;
+				var currentNodeIndex = _self.node.finished;
+				var setImage = function(){
+					if(imageIndex == imageCount + 1){
+						_self.drawLine(_self.topNodeX+_self.lineFromStep*currentNodeIndex+10,_self.lineFromY,_self.bottomNodeStep*currentNodeIndex+_self.bottomNodeW/2,_self.lineToY);
+						if(currentNodeIndex == _self.node.total - 1){
+							_self.ctx.clearRect(_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+							_self.drawImage("./images/new.png",_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+						return;
+						}else{
+							_self.ctx.clearRect(_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+							_self.drawImage("./images/new.png",_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+							currentNodeIndex = ++nodeIndex;
+							imageIndex = 1;
+						}
+					}
+
+					_self.drawImage("./images/upgrading_"+imageIndex+".png",_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+					_self.ctx.clearRect(_self.bottomNodeStep*currentNodeIndex,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+					imageIndex++;
+					setTimeout(setImage,600);
+				}
+				setTimeout(setImage,600);
+
+			},
+			initCanvas:function(){
+				var _self = this;
+				_self.canvas = document.getElementById('topology');
+				_self.ctx = _self.canvas.getContext("2d");
+			},
+			drawTopology:function(){
+				var _self = this;
+				var height = $("#topology").height();
+				_self.topNodeX = _self.bottomNodeStep*_self.node.total/2-_self.topNodeW/2;
+				_self.topNodeY = height/5;
+				_self.bottomNodeY = height-200;
+				_self.lineFromStep = _self.topNodeW/_self.node.total;
+				_self.lineFromY = _self.topNodeY + _self.topNodeH;
+				_self.lineToY = _self.bottomNodeY + _self.bottomNodeH/2;
+				_self.drawImage("./images/balance.png",_self.topNodeX,_self.topNodeY,_self.topNodeW,_self.topNodeH);
+				for(var i = 0;i < _self.node.total;i++){
+					if(i < _self.node.finished){
+						_self.drawImage("./images/new.png",_self.bottomNodeStep*i,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+					
+					}else{
+						_self.drawImage("./images/old.png",_self.bottomNodeStep*i,_self.bottomNodeY,_self.bottomNodeW,_self.bottomNodeH);
+					}
+					_self.drawLine(_self.topNodeX+_self.lineFromStep*i+10,_self.lineFromY,_self.bottomNodeStep*i+_self.bottomNodeW/2,_self.lineToY);
+						
+				}
+			},
+			drawImage:function(imageUrl,x,y,w,h){
+				var _self = this;
+				var imgObj = new Image();
+				imgObj.src = imageUrl;
+				imgObj.onload = function(){
+					_self.ctx.drawImage(this,x,y,w,h);
+				}
+			},
+			drawLine:function(fromX,fromY,toX,toY){
+				var _self = this;
+				_self.ctx.moveTo(fromX,fromY);
+				_self.ctx.lineTo(toX,toY);
+				_self.ctx.lineWith = 1;
+				_self.ctx.strokeStyle = "#ec7f0b";
+				_self.ctx.stroke();
+			}
+		}
+	})	
+
+</script>
+</html>
